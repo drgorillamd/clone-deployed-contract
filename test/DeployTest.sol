@@ -11,12 +11,9 @@ contract TestDeploy is Test {
         _target = address(new Target());
     }
 
-    function testDeploy() public {
+    // This one doesn't work (yet?), just need a bit of precompiled assembly
+    function Skip_testDeploy() public {
         address _out;
-
-        emit log_uint((_target.code).length);
-
-        bytes32 _t;
 
         assembly {
             // Retrieve target address
@@ -31,24 +28,64 @@ contract TestDeploy is Test {
             // Copy the bytecode
             extcodecopy(_targetAddress, _freeMem, 0, _codeSize)
 
+            // Deploying is running init which will, un turn, return the bytecode and the evm takes it from there:
+            // Insert smart precompiled asm here
+
             // Deploy the copied bytecode
             _out := create(0, _freeMem, _codeSize)
 
-            // We're tidy poeple are, we update our freemem ptr
-            mstore(0x40, add(_freeMem, _codeSize))
+            // We're tidy people, we update our freemem ptr + 32bytes for the padding - yes, ugly
+            mstore(0x40, add(_freeMem, add(_codeSize, 32)))
         }
 
-        emit log_bytes32(_t);
+        emit log_address(_out);
+        emit log_bytes(_out.code);
 
-        // // Deployment?
-        // assert(_out != address(0));
+        // Deployment?
+        assert(_out != address(0));
 
-        // (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
-        // require(_callStatus, "callStatusFail");
+        (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
+        require(_callStatus, "callStatusFail");
 
-        // bool _success = abi.decode(_ret, (bool));
+        bool _success = abi.decode(_ret, (bool));
 
-        // assertTrue(_success);
+        assertTrue(_success);
     }
 
+    function testICopiedItFromStackExchange() public {
+        address _out;
+      
+        assembly{
+            // Retrieve target address
+            let _targetAddress := sload(_target.slot)
+
+            mstore(0x0, or (0x5880730000000000000000000000000000000000000000803b80938091923cF3 ,mul(_targetAddress,0x1000000000000000000)))
+            _out := create(0,0, 32)
+        }
+
+        // Deployment?
+        assert(_out != address(0));
+
+        (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
+        require(_callStatus, "callStatusFail");
+
+        bool _success = abi.decode(_ret, (bool));
+
+        assertTrue(_success);
+    }
+
+    function testCompareWithDeployment() public {
+
+        address _out = address(new Target());
+    
+        // Deployment?
+        assert(_out != address(0));
+
+        (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
+        require(_callStatus, "callStatusFail");
+
+        bool _success = abi.decode(_ret, (bool));
+
+        assertTrue(_success);
+    }
 }
