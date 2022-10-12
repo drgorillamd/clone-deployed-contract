@@ -1,3 +1,5 @@
+// edit: this is more gas optimal: https://gist.github.com/holiman/069de8d056a531575d2b786df3345665
+
 // I started from this Yul empty contract, only having a basic deployer:
 
 object "EmptyContract" {
@@ -45,10 +47,10 @@ What we do with it is:
 62length   // PUSH3 length = code length, 0 padded to 3bytes, to have a fixed
            // length for this init()                                                     stack:[length]
 610012     // PUSH2 0012 = offset of the code, now fixed (using the push4 before)              [0012, length]
-81         // DUP2                                                                             [FFFFFFF, 0012, lengthF]
-81         // DUP2                                                                             [0012, FFFFFFF, 0012, lengthF]
-6000       // PUSH1 0 = the 0 arg in datacopy (where to copy the bytecode in memory)           [0, 0012, FFFFFFF, 0012, lengthF]
-39         // CODECOPY(0, 0x12, 0xlength) copy at 0 the code
+81         // DUP2                                                                             [length, 0012, length]
+81         // DUP2                                                                             [0012, length, 0012, length]
+6000       // PUSH1 0 = the 0 arg in datacopy (where to copy the bytecode in memory)           [0, 0012, length, 0012, length]
+39         // CODECOPY(0, 0x11, 0xlength) copy at 0 the code
            // starting after this/offset 0x12, 0xFF.. long                                     [0012, length]
 81         // DUP2                                                                             [length, 0012, length]
 6000       // PUSH1 0                                                                          [0, length, 0012, length]
@@ -57,14 +59,9 @@ fe         // INVALID -> unreachable
 
 
 This is 36 nibbles long, aka 18 bytes, less than a word, we good (note the end-part is 13 bytes long == 104 bits)
-62000000 6100128181600039816000f3fe
+62 000000 6100118181600039816000f3fe
 
-We then need to append our bytecode at the end + includ the correct length, in Yul:
-
-let _codeSize := extcodesize(_targetAddress) // Get the size
-let _mask := shl(_codeSize, 104) // Shift the length to the length placeholder
-let _deployMeDaddy := or(_mask, 0x620000006100128181600039816000f3fe) // land the size
-
+We then need to append our bytecode at the end + includ the correct length, in Yul (see DeployTest)
 
 We use a push3/3 bytes to store length as Spurious Dragon limits contract size to 24_576 bytes (= 196_608 bits),
 3 bytes can store 16_777_216 bits and we don't know the size upfront (alt would be to conditionnaly branch and

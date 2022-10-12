@@ -11,7 +11,6 @@ contract TestDeploy is Test {
         _target = address(new Target());
     }
 
-    // This one doesn't work (yet?), just need a bit of precompiled assembly
     function testDeploy() public {
         address _out;
 
@@ -31,7 +30,7 @@ contract TestDeploy is Test {
             let _mask := mul(_codeSize, 0x100000000000000000000000000000000000000000000000000000000)
 
             // I built the init by hand (and it was quite fun)
-            let _initCode := or(_mask, 0x620000006100128181600039816000f3fe000000000000000000000000000000)
+            let _initCode := or(_mask, 0x620000006100118181600039816000f3fe000000000000000000000000000000)
 
             mstore(_freeMem, _initCode)
 
@@ -47,19 +46,16 @@ contract TestDeploy is Test {
             mstore(0x40, add(_freeMem, add(_codeSize, 64)))
         }
 
-        emit log_bytes32(_dump);
-        emit log_address(_out);
-        emit log_bytes(_out.code);
-
         // Deployment?
         assert(_out != address(0));
 
         (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
-        // require(_callStatus, "callStatusFail");
 
-        // bool _success = abi.decode(_ret, (bool));
+        require(_callStatus, "callStatusFail");
 
-        // assertTrue(_success);
+        bool _success = abi.decode(_ret, (bool));
+
+        assertTrue(_success);
     }
 
     function testICopiedItFromStackExchange() public {
@@ -69,8 +65,8 @@ contract TestDeploy is Test {
             // Retrieve target address
             let _targetAddress := sload(_target.slot)
 
-            mstore(0x0, or (0x5880730000000000000000000000000000000000000000803b80938091923cF3 ,mul(_targetAddress,0x1000000000000000000)))
-            _out := create(0,0, 32)
+            mstore(0x0, or (0x5880730000000000000000000000000000000000000000803b80938091923cF3, mul(_targetAddress,0x1000000000000000000)))
+            _out := create(0, 0, 32)
         }
 
         // Deployment?
