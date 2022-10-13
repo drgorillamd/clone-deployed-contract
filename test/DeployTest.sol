@@ -4,7 +4,9 @@ pragma solidity ^0.8.16;
 import "forge-std/Test.sol";
 import "../src/Target.sol";
 
-contract TestDeploy is Test {
+// Diferent contract to use the same function selector, removing difference due to the routing table
+
+contract TestDeployMix is Test {
     address _target;
 
     function setUp() public {
@@ -32,7 +34,7 @@ contract TestDeploy is Test {
 
             mstore(_freeMem, _initCode)
 
-            // Copy the bytecode (our initialise part is 14 bytes long)
+            // Copy the bytecode (our initialise part is 13 bytes long)
             extcodecopy(_targetAddress, add(_freeMem, 13), 0, _codeSize)
 
             // Deploy the copied bytecode
@@ -50,8 +52,16 @@ contract TestDeploy is Test {
 
         assertTrue(_success);
     }
+}
 
-    function testCompareWithRawBytecode() public {
+contract TestDeployPureBytecode is Test {
+    address _target;
+
+    function setUp() public {
+        _target = address(new Target());
+    }
+
+    function testDeploy() public {
         address _out;
       
         assembly{
@@ -72,8 +82,16 @@ contract TestDeploy is Test {
 
         assertTrue(_success);
     }
+}
 
-    function testCompareWithStdDeployment() public {
+contract TestDeployStd is Test {
+    address _target;
+
+    function setUp() public {
+        _target = address(new Target());
+    }
+
+    function testDeploy() public {
 
         address _out = address(new Target());
     
@@ -87,4 +105,5 @@ contract TestDeploy is Test {
 
         assertTrue(_success);
     }
+
 }
