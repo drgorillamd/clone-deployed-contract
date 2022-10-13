@@ -14,8 +14,6 @@ contract TestDeploy is Test {
     function testDeploy() public {
         address _out;
 
-        bytes32 _dump;
-
         assembly {
             // Retrieve target address
             let _targetAddress := sload(_target.slot)
@@ -30,20 +28,15 @@ contract TestDeploy is Test {
             let _mask := mul(_codeSize, 0x100000000000000000000000000000000000000000000000000000000)
 
             // I built the init by hand (and it was quite fun)
-            let _initCode := or(_mask, 0x620000006100118181600039816000f3fe000000000000000000000000000000)
+            let _initCode := or(_mask, 0x62000000600081600d8239f3fe00000000000000000000000000000000000000)
 
             mstore(_freeMem, _initCode)
 
-            // Copy the bytecode (our initialise part is 17 bytes long)
-            extcodecopy(_targetAddress, add(_freeMem, 17), 0, _codeSize)
-            
-            _dump := mload(_freeMem)
-            
+            // Copy the bytecode (our initialise part is 14 bytes long)
+            extcodecopy(_targetAddress, add(_freeMem, 13), 0, _codeSize)
+
             // Deploy the copied bytecode
             _out := create(0, _freeMem, _codeSize)
-
-            // We're tidy people, we update our freemem ptr + 64bytes for the padding - yes, ugly
-            mstore(0x40, add(_freeMem, add(_codeSize, 64)))
         }
 
         // Deployment?
@@ -58,7 +51,7 @@ contract TestDeploy is Test {
         assertTrue(_success);
     }
 
-    function testICopiedItFromStackExchange() public {
+    function testCompareWithRawBytecode() public {
         address _out;
       
         assembly{
@@ -80,7 +73,7 @@ contract TestDeploy is Test {
         assertTrue(_success);
     }
 
-    function testCompareWithDeployment() public {
+    function testCompareWithStdDeployment() public {
 
         address _out = address(new Target());
     
