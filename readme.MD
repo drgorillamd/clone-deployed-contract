@@ -128,8 +128,8 @@ We then need to append our bytecode at the end + include the correct length, in 
         // Copy the bytecode (our initialise part is 13 bytes long)
         extcodecopy(_targetAddress, add(_freeMem, 13), 0, _codeSize)
 
-        // Deploy the copied bytecode
-        _out := create(0, _freeMem, _codeSize)
+        // Deploy the copied bytecode, including the constructor
+        _out := create(0, _freeMem, add(_codeSize, 13))
     }
 ```
 
