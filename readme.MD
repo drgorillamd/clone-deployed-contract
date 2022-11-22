@@ -135,5 +135,4 @@ We then need to append our bytecode at the end + include the correct length, in 
 
 We use a push3/3 bytes to store length as Spurious Dragon limits contract size to 24_576 bytes (= 196_608 bits),
 3 bytes can store 16_777_216 bits and we don't know the size upfront (alt would be to conditionnaly branch and
-use push1/push2/push3 accordingly or do everything in assembly, like https://gist.github.com/holiman/069de8d056a531575d2b786df3345665, which is )
-*/
+use push1/push2/push3 accordingly or do everything in assembly, like https://gist.github.com/holiman/069de8d056a531575d2b786df3345665, which is quite nifty, almost same cost but a tad tougher to read imo)
