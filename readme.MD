@@ -1,3 +1,5 @@
+Most of the code is in the test file. Here is the walkthrough:
+
 So I ran into this issue recently: how to clone a contract already deployed. Here's a how-to:
 
 There is an opcode `EXTCODECOPY` which takes 4 arguments (from evm.codes):
