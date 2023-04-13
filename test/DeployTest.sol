@@ -35,22 +35,28 @@ contract TestDeployMix is Test {
             mstore(_freeMem, _initCode)
 
             // Copy the bytecode (our initialise part is 13 bytes long)
-            extcodecopy(_targetAddress, add(_freeMem, 13), 0, add(_codeSize, 13))
+            extcodecopy(_targetAddress, add(_freeMem, 13), 0, _codeSize)
 
             // Deploy the copied bytecode
-            _out := create(0, _freeMem, _codeSize)
+            _out := create(0, _freeMem, add(_codeSize, 13))
         }
 
-        // Deployment?
-        assert(_out != address(0));
+        // Check: successful deployment?
+        assertTrue(_out != address(0), "deployment failed");
 
+        // Interact with the clone
         (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
+        
+        // Check: function call successful?
+        assertTrue(_callStatus, "contract call failed");
 
-        require(_callStatus, "callStatusFail");
-
+        // Check: function works as expected?
         bool _success = abi.decode(_ret, (bool));
+        assertTrue(_success, "function logic failed");
 
-        assertTrue(_success);
+        // Check: bytecodes match, including metadata?
+        address _compare = address(new Target());
+        assertEq(_out.code, _compare.code, "bytecode mismatch");
     }
 }
 
@@ -72,15 +78,22 @@ contract TestDeployPureBytecode is Test {
             _out := create(0, 0, 32)
         }
 
-        // Deployment?
-        assert(_out != address(0));
+        // Check: successful deployment?
+        assertTrue(_out != address(0), "deployment failed");
 
+        // Interact with the clone
         (bool _callStatus, bytes memory _ret) = _out.staticcall(abi.encodeCall(Target.iExist, ()));
-        require(_callStatus, "callStatusFail");
+        
+        // Check: function call successful?
+        assertTrue(_callStatus, "contract call failed");
 
+        // Check: function works as expected?
         bool _success = abi.decode(_ret, (bool));
+        assertTrue(_success, "function logic failed");
 
-        assertTrue(_success);
+        // Check: bytecodes match, including metadata?
+        address _compare = address(new Target());
+        assertEq(_out.code, _compare.code, "bytecode mismatch");
     }
 }
 
