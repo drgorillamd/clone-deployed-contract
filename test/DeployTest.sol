@@ -35,7 +35,7 @@ contract TestDeployMix is Test {
             mstore(_freeMem, _initCode)
 
             // Copy the bytecode (our initialise part is 13 bytes long)
-            extcodecopy(_targetAddress, add(_freeMem, 13), 0, _codeSize)
+            extcodecopy(_targetAddress, add(_freeMem, 13), 0, add(_codeSize, 13))
 
             // Deploy the copied bytecode
             _out := create(0, _freeMem, _codeSize)
